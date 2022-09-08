@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} {% endblock %} - FlaskApp</title>
+    <link rel="stylesheet" type="text/css" href="./static/stylesheets/styles.css">
+</head>
+<body>
+    <div id="header" class="header">
+        <div class="logodiv">
+            <a href="/"><img class="logo" src="./static/images/cannon.png"></a>
+
+            <div class="filter">
+            <a href="/">HOME</a>
+
+            <span class="footdogs">  / </span>
+            <a href="/newjob">NEW JOB</a>
+
+            <span class="footdogs">  / </span>
+            <a href="/repos">REPOS</a>
+
+            <span class="footdogs">  / </span>
+            <a href="https://n-o-d-e.net/rss/rss.xml">RSS</a>
+            <span class="footdogs">  / </span>
+            <a href="http://n-o-d-e.shop">SHOP</a>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        {% block content %} {% endblock %}
+    </div>
+</body>
+</html>

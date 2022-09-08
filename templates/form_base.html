@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} {{form_title}} {% endblock %}</h1>
+
+    <form action="{{submit_path}}" method="post" class="form">
+        {% block form_content %} {% endblock %}
+        <input type="submit" value="{{submit_button_title}}">
+    </form>
+
+{% endblock %}
