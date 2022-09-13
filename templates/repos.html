@@ -2,10 +2,96 @@
 
 {% block content %}
     <h1>{% block title %} Repo Control Panel {% endblock %}</h1>
+    <h1>Repo List</h1>
+    <ul id="zipList">
+
+    </ul>
+    <table>
+        <tbody id="repoList">
+        <tr>
+            <td><button class="danger">delete</button></td>
+            <td>[some repo]</td>
+        </tr>
+        </tbody>
+    </table>
     <h1>Upload New Repo</h1>
-    <form action="/repos" method="post" class="form">
-        <input type="file"/>
+    <form action="/repos" method="post" enctype = "multipart/form-data" class="form">
+        <input name="file" id="file" type="file"/>
         <br>
         <input type="submit" value="upload">
     <form>
+    
+    <script>
+
+        function deleteRepo(repo)
+        {
+            let deleteButton = document.getElementById(repo);
+            deleteButton.disabled = true;
+            fetch("/repos", { method: 'DELETE', body: repo })
+            .then(res => {return res.json()})
+            .then(data => {
+                if (data.error)
+                {
+                    alert(data.error);
+                }
+                else
+                {
+                    alert(data.message)
+                    location.reload();
+                }
+            });
+            deleteButton.disabled = false;
+            
+        }
+
+        document.addEventListener('click',function(e){
+            if(e.target && e.target.className=="danger"){
+                deleteRepo(e.target.id);
+            }
+        });
+
+        function createNewRepoItem(repo)
+        {
+            // create delete button
+            let deleteRepoButton = document.createElement("button");
+            deleteRepoButton.className = "danger";
+            deleteRepoButton.id = repo;
+            deleteRepoButton.innerHTML = "delete";
+            // create repo name
+            let newRepoTitle = document.createElement("td");
+            let repoTitle = `[${repo}]`;
+            newRepoTitle.innerHTML = repoTitle;
+            // create tr
+            let newItemContainer = document.createElement("tr");
+
+            let deleteButtonTd = document.createElement("td");
+            deleteButtonTd.appendChild(deleteRepoButton);
+
+            newItemContainer.appendChild(deleteButtonTd);
+            newItemContainer.appendChild(newRepoTitle);
+            document.getElementById("repoList").appendChild(newItemContainer);
+        }
+
+        function createNewZipItem(repo)
+        {
+            let newItem = document.createElement("li");
+            let repoFixed = repo.replace(".zip", "")
+            let repoTitle = `[${repoFixed}]`
+            newItem.innerHTML = repoTitle + " <span>Awaiting Unzip...</span>";
+            document.getElementById("zipList").appendChild(newItem);
+        }
+
+        fetch("/list/repos")
+            .then(res => { return res.json() })
+            .then(data => {
+                let repos = data["repos"];
+                let zips = data["zips"];
+                for (let i = 0; i < repos.length; ++i)
+                    createNewRepoItem(repos[i]);
+                for (let i = 0; i < zips.length; ++i)
+                    createNewZipItem(zips[i])
+            });
+    </script>
+
+
 {% endblock %}

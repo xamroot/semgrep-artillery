@@ -25,6 +25,8 @@ img             {width: 900px; max-width: 900px; margin-bottom: 20px;}
 }
 .catbox			{width: 300px; height: 160px; right:0; margin:0; position: absolute; background: #222;
     display: block; z-index: 999;}
+.container      {display: flexbox; flex-direction: row;}
+.danger         {background-color: #ff3300; color:white; border-radius: 5px; border: white 0.5px solid; padding:7px; z-index: 1000;}
 .footdogs       {margin:0 5px}
 .tag            {color: #c8c8c8;}
 .notification   {color: #222; background: #fff;}

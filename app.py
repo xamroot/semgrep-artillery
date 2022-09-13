@@ -1,4 +1,10 @@
 from flask import *
+from werkzeug import *
+import os
+import shutil
+import unzipper
+import signal
+import sys
 
 UPLOAD_FOLDER = './repos'
 ALLOWED_EXTENSIONS = {"zip"}
@@ -10,12 +16,17 @@ secret = "FAKE_SECRET_KEY_LULZ"
 users = {}
 sessions = {}
 
+semgrep_processes = {}
+
 semgrep_rules = [
     "r/csharp.dotnet.security.audit.ldap-injection.ldap-injection",
     "r/csharp.lang.security.injections.os-command.os-command-injection",
     "r/csharp.dotnet.security.audit.mass-assignment.mass-assignment"
 ]
 
+def signal_handler(sig, frame):
+    unzipper.kill_unzipper()
+    sys.exit(0)
 
 @app.route('/')
 def index():
@@ -28,16 +39,24 @@ def listrules():
 
 @app.route("/list/repos")
 def listrepos():
-    return jsonify({"repos": []})
+    repo_contents = os.listdir("./repos")
+    zipfiles = []
+    repos = []
+    for file in repo_contents:
+        if file[-4:] == ".zip":
+            zipfiles.append(file)
+        else:
+            repos.append(file)
+    return jsonify({"repos": repos, "zips": zipfiles})
 
-@app.route('/repos', methods=["GET", "POST"])
+@app.route('/repos', methods=["GET", "POST", "DELETE"])
 def repos():
     if request.method == "GET":
         return render_template(
             'repos.html'
             )
     elif request.method == "POST":
-        print("HIT")
+        print(request.files["file"])
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -47,10 +66,31 @@ def repos():
         if file.filename == '':
             flash('No selected file')
             return "fail"
+        # file uploaded exists, run checks should be a new a zip file
+        # then save zip file (will be unzipped by unzipper thread)
         if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
-            return "success"
+            filename = file.filename
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            unzipped_filepath = filepath.split(".zip")[0]
+            # check whether zip already exists or has been unzipped 
+            if os.path.exists(unzipped_filepath) or os.path.exists(filepath):
+                return "repo already exists"
+            # save repo and return success
+            else:
+                file.save(filepath)
+                return "success"
+    elif request.method == "DELETE":
+        filename = request.data.decode()
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.exists(filepath):
+            if filename in semgrep_processes:
+                return jsonify({"error": "repo in use by semgrep"})
+            else:
+                shutil.rmtree(filepath)
+                return jsonify({"message": "success"})
+        else:
+            return jsonify({"error": "repo does not exist"})
+
 
 @app.route('/newjob', methods=["GET", "POST"])
 def newjob():
@@ -63,6 +103,7 @@ def newjob():
             rules=semgrep_rules
             )
     elif request.method == "POST":
+        print(request.form)
         return "success"
 
 @app.route('/login', methods=["GET", "POST"])
@@ -89,4 +130,7 @@ def signup():
     elif request.method == "POST":
         return "success"
 
+signal.signal(signal.SIGINT, signal_handler)
+
+unzipper.run_unzipper()
 app.run()

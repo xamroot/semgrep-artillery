@@ -4,8 +4,7 @@
 <label for="operation">operation</label><br>
 <input id="operation" value="None" name="operation" type="text" /><br>
 <label for="repo">repo</label><br>
-<select id="repo" name="repo">
-    <option>target1</option>
+<select id="repoSelector" name="repo">
 </select>
 <br>
 <label>Rules</label><br>
@@ -15,32 +14,54 @@
 <br style="margin-bottom:5px">
 
 <script>
-    let rulesListElem = document.getElementById("rules-list");
-    fetch("/list/rules")
-        .then(res => {return res.json()})
+    function loadRepos() {
+    fetch("/list/repos")
+        .then(res => { return res.json() })
         .then(data => {
-            console.log(data)
-            let rules = data["rules"];
-            for (let i=0; i<rules.length; ++i)
+            let repos = data["repos"];
+            let repoSelector = document.getElementById("repoSelector");
+            for (let i =0; i<repos.length; ++i)
             {
-                let newRuleListElem = document.createElement("li");
-                let newRuleListInput = document.createElement("input");
-                let newRuleListLabel = document.createElement("label");
-                newRuleListInput.setAttribute(
-                    "type",
-                    "checkbox"
-                )
-
-                newRuleListInput.setAttribute(
-                    "id",
-                    rules[i]
-                )
-
-                newRuleListLabel.innerHTML = rules[i]
-                newRuleListElem.appendChild(newRuleListInput);
-                newRuleListElem.appendChild(newRuleListLabel);
-                rulesListElem.appendChild(newRuleListElem);
+                let newRepo = repos[i];
+                repoSelector.options[repoSelector.options.length] = new Option(newRepo, newRepo);
             }
         });
+    }
+
+    function loadRules()
+    {
+        let rulesListElem = document.getElementById("rules-list");
+        fetch("/list/rules")
+            .then(res => {return res.json()})
+            .then(data => {
+                console.log(data)
+                let rules = data["rules"];
+                for (let i=0; i<rules.length; ++i)
+                {
+                    let newRuleListElem = document.createElement("li");
+                    let newRuleListInput = document.createElement("input");
+                    let newRuleListLabel = document.createElement("label");
+                    newRuleListInput.setAttribute(
+                        "type",
+                        "checkbox"
+                    )
+
+                    newRuleListInput.setAttribute(
+                        "id",
+                        rules[i]
+                    )
+
+                    newRuleListLabel.innerHTML = rules[i]
+                    newRuleListElem.appendChild(newRuleListInput);
+                    newRuleListElem.appendChild(newRuleListLabel);
+                    rulesListElem.appendChild(newRuleListElem);
+                }
+            });
+    }
+
+    loadRepos();
+    loadRules();
+    
+
 </script>
 {% endblock %}
