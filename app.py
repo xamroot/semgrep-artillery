@@ -2,9 +2,10 @@ from flask import *
 from werkzeug import *
 import os
 import shutil
-import unzipper
 import signal
 import sys
+import unzipper
+import semgrepper
 
 UPLOAD_FOLDER = './repos'
 ALLOWED_EXTENSIONS = {"zip"}
@@ -26,6 +27,7 @@ semgrep_rules = [
 
 def signal_handler(sig, frame):
     unzipper.kill_unzipper()
+    semgrepper.kill_semgrepper()
     sys.exit(0)
 
 @app.route('/')
@@ -92,6 +94,13 @@ def repos():
             return jsonify({"error": "repo does not exist"})
 
 
+@app.route('/stats', methods=["GET"])
+def stats():
+    if request.method == "GET":
+        return render_template(
+            'status.html'
+            )
+
 @app.route('/newjob', methods=["GET", "POST"])
 def newjob():
     if request.method == "GET":
@@ -104,6 +113,7 @@ def newjob():
             )
     elif request.method == "POST":
         print(request.form)
+        semgrepper.add_semgrep_job("TEST")
         return "success"
 
 @app.route('/login', methods=["GET", "POST"])
@@ -133,4 +143,5 @@ def signup():
 signal.signal(signal.SIGINT, signal_handler)
 
 unzipper.run_unzipper()
+semgrepper.run_semgrepper()
 app.run()

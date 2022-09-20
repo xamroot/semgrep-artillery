@@ -1,0 +1,11 @@
+{
+	"repos": {
+		"some_repo_job": {
+			"jobs": {
+				"111153159": {
+					"status": "COMPLETE"
+				}
+			}
+		}
+	}
+}
