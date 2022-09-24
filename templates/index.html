@@ -2,9 +2,84 @@
 
 {% block content %}
     <h1>{% block title %} Overview {% endblock %}</h1>
-    <h1>Running Jobs</h1>
-    <h3>Some job 1</h3>
-    <h1>Finished Jobs</h1>
-    <h3>Some job 1</h3>
-    <h3>{{ data }}</h3>
+    <table class="jobtable">
+        <tbody id="joblist">
+        </tbody>
+    </table>
+    <script>
+        let createJobEntry = (jid, timestamp, creator, repo, state, findings) => {
+            let newTr = document.createElement("tr");
+            newTr.className = "jobentry"
+
+            let prefixTd = document.createElement("td");
+            let prefixP = document.createElement("p");
+            prefixP.className = "prefix";
+            prefixP.innerText = "⟳";
+            if (state == "QUEUED")
+            {
+                prefixP.innerText = "⚠";
+            }
+            else if (state == "FINISHED")
+            {
+                prefixP.innerText = "☑";
+            }
+            prefixTd.appendChild(prefixP);
+            newTr.appendChild(prefixTd);
+
+            let dataArr = [jid, timestamp, creator, repo, state, findings];
+            for (let i=0; i<dataArr.length; ++i)
+            {
+                let newTd = document.createElement("td");
+                newTd.className = "jobitem"
+
+                let newP = document.createElement("p");
+                newP.innerText = dataArr[i];
+                newP.className = "jobtext"
+
+                newTd.appendChild(newP)
+                newTr.appendChild(newTd);
+            }
+            document.getElementById("joblist").appendChild(newTr);
+        }
+
+        let convertstamp = (timestamp) => {
+            var date = new Date(timestamp * 1000);
+            // Hours part from the timestamp
+            var hours = date.getHours();
+            // Minutes part from the timestamp
+            var minutes = "0" + date.getMinutes();
+            // Seconds part from the timestamp
+            var seconds = "0" + date.getSeconds();
+
+            // Will display time in 10:30:23 format
+            var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
+            return formattedTime;
+        }
+
+        let initializeJobEntries = (index) => {
+            fetch(`/jobs/list/${index}`)
+            .then(res => {return res.json();} )
+            .then(data => {
+                let jobs = data["jobs"];
+                for (let i=0; i<jobs.length; ++i)
+                {
+                    let currJob = jobs[i];
+                    let jid = currJob["jid"];
+                    let timestamp = convertstamp(currJob["timestamp"]);
+                    let repo = currJob["repo"];
+                    let creator = "admin";
+                    let state = currJob["state"];
+                    let findings = "-";
+                    if (state == "FINISHED") {
+                        findings = currJob["results"]["results"].length;
+                    }
+
+                    createJobEntry(jid,timestamp,creator,repo,state,findings);
+                }
+            });
+        }
+
+        initializeJobEntries(0);
+    </script>
 {% endblock %}

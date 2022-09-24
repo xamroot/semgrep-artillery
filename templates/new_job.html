@@ -1,19 +1,48 @@
-{% extends 'form_base.html' %}
+{% extends 'base.html' %}
 
-{% block form_content %}
-<label for="operation">operation</label><br>
-<input id="operation" value="None" name="operation" type="text" /><br>
-<label for="repo">repo</label><br>
+{% block content %}
+<h1>New Semgrep Job</h1>
+<label for="tags">Tags</label><br>
+<input id="tags" value="None" name="tags" type="text" /><br>
+<br>
+<label for="repo">Repository</label><br>
 <select id="repoSelector" name="repo">
 </select>
+<br>
 <br>
 <label>Rules</label><br>
 <ul id="rules-list">
 </ul>
 <br>
 <br style="margin-bottom:5px">
+<button id="submit" onclick="submitNewJob()">submit</button>
 
 <script>
+
+    function submitNewJob() {
+        let data = {}
+        data["repo"] = document.getElementById("repoSelector").value
+        data["rules"] = []
+
+        let ruleCheckboxes = document.getElementsByClassName("ruleCheckbox");
+        for (let i=0; i<ruleCheckboxes.length; ++i)
+        {
+            let ruleCheckbox = ruleCheckboxes[i];
+            if (ruleCheckbox.checked === true)
+            {
+                data["rules"].push(ruleCheckbox.id);
+            }
+        }
+
+        alert(JSON.stringify(data));
+
+        fetch("/newjob", {method: "POST", body:JSON.stringify(data)})
+            .then( res => { return res.json() })
+            .then( dat => {
+                alert(dat.message); 
+            })
+    }
+
     function loadRepos() {
     fetch("/list/repos")
         .then(res => { return res.json() })
@@ -51,6 +80,8 @@
                         rules[i]
                     )
 
+                    newRuleListInput.className = "ruleCheckbox";
+
                     newRuleListLabel.innerHTML = rules[i]
                     newRuleListElem.appendChild(newRuleListInput);
                     newRuleListElem.appendChild(newRuleListLabel);
@@ -60,8 +91,7 @@
     }
 
     loadRepos();
-    loadRu
-    les();
+    loadRules();
     
 
 </script>
