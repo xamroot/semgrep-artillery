@@ -79,6 +79,7 @@ def run_tests():
     test_jobstatus_should_be_finished_after_processed_and_should_have_results()
     test_job_should_have_results_anytime_after_processing()
     test_jobs_list_should_show_most_recent_job_at_start()
+    test_results_list_should_show_most_recent_finding_at_start()
     # tests done, kill server process and join thread
     os.kill(server_proc.pid, signal.SIGINT)
     server_thread.join()
@@ -226,19 +227,19 @@ def test_jobstatus_should_be_finished_after_processed_and_should_have_results():
     global_data["finished_jid"] = jid
     # now wait for job status to be finished
     job_state = ""
-    max_loops = 10
+    max_loops = 25
     loops = 0
     while job_state != "FINISHED" and loops <= max_loops:
         url = f"http://{server_address}:{server_port}/job/{jid}"
         res = requests.get(url)
         job_state = json.loads(res.text)["job"]["state"]
         loops += 1
-        time.sleep(2)
+        time.sleep(3)
     evaluate_test( job_state == "FINISHED" )
     # now get results for job
     url = f"http://{server_address}:{server_port}/job/{jid}/results"
     res = requests.get(url)
-    results = json.loads(res.text)["results"]["results"]
+    results = json.loads(res.text)["results"]
     evaluate_test( len(results) > 0 )
 
 # should be able to view a jobs results at any point after the job
@@ -263,6 +264,25 @@ def test_jobs_list_should_show_most_recent_job_at_start():
     results = json.loads(res.text)
     evaluate_test( results["jobs"][0]["jid"] == jid)
 
+# Ensure we can get all job's results
+def test_results_list_should_show_most_recent_finding_at_start():
+    global global_data
+    jid = global_data["finished_jid"]
+    # now get all results
+    url = f"http://{server_address}:{server_port}/results/list/0"
+    res = requests.get(url, json={"filters":{}})
+    results = json.loads(res.text)
+    evaluate_test( results["results"][0]["jid"] == jid and len(results["results"]) > 0)
+
+# Ensure we can get all job's results
+def test_results_list_should_show_most_recent_finding_at_start():
+    global global_data
+    jid = global_data["finished_jid"]
+    # now get all results
+    url = f"http://{server_address}:{server_port}/results/list/0"
+    res = requests.get(url, json={"filters":{}})
+    results = json.loads(res.text)
+    evaluate_test( results["results"][0]["jid"] == jid and len(results["results"]) > 0)
 
 try:
     run_tests()

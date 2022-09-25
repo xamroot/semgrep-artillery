@@ -33,6 +33,7 @@ img             {width: 900px; max-width: 900px; margin-bottom: 20px;}
 .jobtext        {background-color: #222; padding:5px; padding-left:10px; padding-right:10px; margin:0px;}
 .footdogs       {margin:0 5px}
 .prefix         {font-size:35px; padding:0px; margin:0px;}
+.timestamp      {font-size:20px; padding:0px; margin:0px;}
 .tag            {color: #c8c8c8;}
 .notification   {color: #222; background: #fff;}
 .important      {margin-left: -18px;}

@@ -82,10 +82,15 @@ class WorkerThread(threading.Thread):
                     self.curr_job = job_queue.get_nowait()
                 except:
                     continue
+                # set busy flag before processing
                 self.update_busy(True)
+                # update processing queue so daemon can give accurate status
                 processing_jobs_queue.put(self.curr_job)
+                # actually run semgrep against the job
                 self.process_job(self.build_semgrep_cmd())
+                # update finished queue so daemon can give accurate status
                 finished_job_queue.put(self.curr_job)
+                # remove busy flag
                 self.update_busy(False)
                 
                 
@@ -103,6 +108,8 @@ def semgrepper_daemon():
             running = False
             [ worker.stop() for worker in workers ]
             [ worker.join() for worker in workers ]
+        # this code path holds the code for the daemon to run every loop
+        # which the program is not killed
         else:
             # check for new job being processed and update
             # inspectable queue
@@ -112,6 +119,7 @@ def semgrepper_daemon():
             except Exception as e:
                 pass
             if job_being_processed is not None:
+                # update the job status
                 update_job_state(job_being_processed["jid"], "RUNNING")
             # check for new job finished and update list of 
             # finished jobs
@@ -121,6 +129,7 @@ def semgrepper_daemon():
             except Exception as e:
                 pass
             if new_finished_job is not None:
+                # update the job status
                 update_job_state(new_finished_job["jid"], "FINISHED")
 
 def start_semgrepper_daemon():
@@ -205,14 +214,40 @@ def get_jobs(pagination_start, pagination_end):
     global jobs
     jobs_list = list(jobs.values())
     jobs_list.sort(key = lambda x:x["timestamp"], reverse=True)
-    return jobs_list[pagination_start: pagination_end]
+    return jobs_list[pagination_start:min(len(jobs_list),pagination_end)]
 
-def get_results(jid):
+def get_results(pagination_start, pagination_end, filters):
     global jobs
-    if jid not in jobs:
-        return None
-    else:
-        job_entry = jobs[jid]
-        if job_entry["state"] != "FINISHED":
-            return None
-        return job_entry["results"]
+    ret = []
+    # build a timestamp sorted list of jobs
+    jobs_list = list(jobs.values())
+    jobs_list.sort(key = lambda x:x["timestamp"], reverse=True)
+    for job in jobs_list:
+        # ensure job has a results attribute
+        if job["state"] == "FINISHED":
+            with open("LULZ.txt", "w") as f:
+                f.write(str(job))
+            # ensure that any findings exist
+            if "results" in job:
+                job_results = job["results"]["results"]
+                # ensure there was atleast one result found
+                if len(job_results) > 0:
+                    # run tag filter
+                    if "tag" in filters:
+                        if f == "tag":
+                            tag = f["tag"]
+                            if job["tag"] != tag:
+                                continue
+                    for result in job_results:
+                        # add the new result to the start of the list
+                        ret = [result] + ret
+                        # attach the job id to the list entry
+                        ret[0]["jid"] = job["jid"]
+    return ret[pagination_start:min(len(ret),pagination_end)]
+
+def get_job_results(jid):
+    global jobs
+    job = jobs[jid]
+    if job["state"] == "FINISHED":
+        return job["results"]
+    return []

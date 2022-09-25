@@ -34,12 +34,11 @@
             }
         }
 
-        alert(JSON.stringify(data));
-
         fetch("/newjob", {method: "POST", body:JSON.stringify(data)})
             .then( res => { return res.json() })
             .then( dat => {
-                alert(dat.message); 
+                alert(dat.message);
+                window.location = "/";
             })
     }
 

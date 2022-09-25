@@ -1,0 +1,1 @@
+{'repo': 'dummyrepo', 'rules': ['r/csharp.dotnet.security.audit.ldap-injection.ldap-injection'], 'tag': 'None', 'jid': '0a4bd216-a285-4c3d-90c1-77150529d89b', 'timestamp': 1664064932.1660225, 'state': 'FINISHED', 'results': {'errors': [], 'paths': {'_comment': '<add --verbose for a list of skipped paths>', 'scanned': []}, 'results': [], 'version': '0.114.0'}}

@@ -54,6 +54,15 @@ def signal_handler(sig, frame):
 def index():
     return render_template('index.html', data="")
 
+
+@app.route('/results/<jid>',methods=["GET"])
+def results_single(jid):
+    return render_template(
+        'results_single.html', 
+        jid=jid
+    )
+
+
 @app.route("/list/rules")
 def listrules():
     return jsonify({"rules": semgrep_rules})
@@ -120,6 +129,16 @@ def newjob():
         body = json.loads(request.get_data().decode())
         return endpoint.newjob_post(body)
 
+@app.route('/results/list/<index>', methods=["GET"])
+def results_list(index):
+    if request.method == "GET":
+        # parse filters
+        filters = {}
+        body = json.loads(request.get_data().decode())
+        if "filters" in body:
+            filters = body["filters"]
+        # get results list
+        return endpoint.resultslist_get(index,filters)
 
 @app.route('/jobs/running', methods=["GET"])
 def jobs_running():
@@ -133,11 +152,8 @@ def jobs_queued():
 
 @app.route('/jobs/list/<index>', methods=["GET"])
 def jobs_list(index):
-    PAGINATION_SIZE = 10
     if request.method == "GET":
-        index = int(index)
-        end_index = index+1
-        return endpoint.jobs_get(index*PAGINATION_SIZE, end_index*PAGINATION_SIZE)
+        return endpoint.jobs_get(index)
 
 @app.route("/job/<jid>", methods=["GET"])
 def job_status(jid):
